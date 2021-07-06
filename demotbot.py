@@ -4,6 +4,44 @@ import random
 import math
 from bs4 import BeautifulSoup
 
+class komixxy:
+
+	def __init__(self):
+		None
+
+	async def run(self, message):
+
+		query = message.content[:-8]
+		print(query)
+		response = requests.get(f'https://komixxy.pl/szukaj?q={query}')
+		soup = BeautifulSoup(response.content, 'html.parser')
+
+		howManyResults = ''
+		for string in soup.stripped_strings:
+			if 'Znalazłem' in string:
+				for i in string:
+					if str.isdigit(i):
+						howManyResults += i
+
+		if howManyResults == '':
+			await message.channel.send('nie ma')
+			return
+
+		howManyResults = int(howManyResults)
+		howManyPages = math.ceil(howManyResults/10)
+
+		if howManyPages != 1:
+			randomPageNumber = random.randint(1,int(howManyPages))
+			response = requests.get(f'https://komixxy.pl/szukaj/page/{randomPageNumber}?q={query}')
+			soup = BeautifulSoup(response.content, 'html.parser')
+
+		komixxyArray = soup.find_all(class_='picwrapper')
+		randomKomixx = random.choice(komixxyArray)
+		imgUrl = 'https://komixxy.pl' + randomKomixx.img['src']
+
+		await message.channel.send(imgUrl)
+
+
 class demotbot:
 
 	def __init__(self):
@@ -39,17 +77,8 @@ class demotbot:
 
 		demotsArray = soup.find_all(class_='demot')
 
-		try:
-			randomDemot = random.choice(demotsArray)
-			imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
-		except:
-			await message.channel.send('nie ma')
-			print('code: ' + str(response.status_code))
-			print('\ndemotsArray:') #for debugging
-			print(demotsArray)
-			if isSinglePage == False:
-				print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
-			return
+		randomDemot = random.choice(demotsArray)
+		imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
 
 		await message.channel.send(imgUrl)
 
@@ -59,6 +88,7 @@ class demotbot:
 KEY = open('./key').read()
 
 demotbot = demotbot()
+komixxy = komixxy()
 
 client = discord.Client()
 
@@ -73,5 +103,8 @@ async def on_message(message):
 
     if message.content.lower().endswith(' demoty'):
         await demotbot.run(message)
+
+    if message.content.lower().endswith(' komixxy'):
+        await komixxy.run(message)
 
 client.run(KEY)
