@@ -44,7 +44,8 @@ class demotbot:
 			print('code: ' + str(response.status_code))
 			print('\ndemotsArray:') #for debugging
 			print(demotsArray)
-			print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
+			if isSinglePage == False:
+				print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
 			return
 
 		imgFileName = imgUrl.split('/')[-1]
