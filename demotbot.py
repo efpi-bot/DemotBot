@@ -42,7 +42,8 @@ class demotbot:
 		except:
 			await message.channel.send('nie ma')
 			print('code: ' + str(response.status_code))
-			print('\ndemotsArray:\n' + demotsArray) #for debugging
+			print('\ndemotsArray:') #for debugging
+			print(demotsArray)
 			print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
 			return
 
