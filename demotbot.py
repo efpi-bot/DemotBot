@@ -41,7 +41,7 @@ class demotbot:
 			imgUrl = randomDemot['src']
 		except:
 			await message.channel.send('nie ma')
-			print('code: ' + response.status_code)
+			print('code: ' + str(response.status_code))
 			print('\ndemotsArray:\n' + demotsArray) #for debugging
 			print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
 			return
