@@ -11,10 +11,11 @@ class demotbot:
 
 	async def run(self, message):
 
-		query = message.content[:-6]
+		query = message.content[:-7]
 		print(query)
 		response = requests.get(f'https://demotywatory.pl/szukaj?q={query}')
 		soup = BeautifulSoup(response.content, 'html.parser')
+
 		scriptTags = soup.find_all('script')
 		paginatorElement = ''
 		for i in scriptTags:
@@ -33,13 +34,16 @@ class demotbot:
 			response = requests.get(f'https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}')
 			soup = BeautifulSoup(response.content, 'html.parser')
 
-		demotsUrlArray = soup.find_all(class_='demot_pic')
+		demotsArray = soup.find_all(class_='demot')
 
 		try:
-			randomDemot = random.choice(demotsUrlArray)
-			imgUrl = randomDemot.a.img['src']
+			randomDemot = random.choice(demotsArray)
+			imgUrl = randomDemot['src']
 		except:
 			await message.channel.send('nie ma')
+			print('code: ' + response.status_code)
+			print('\ndemotsArray:\n' + demotsArray) #for debugging
+			print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
 			return
 
 		imgFileName = imgUrl.split('/')[-1]
@@ -49,6 +53,7 @@ class demotbot:
 		await message.channel.send(file=discord.File(data, imgFileName))
 
 
+# DISCORD BOT HERE
 
 KEY = open('./key').read()
 
@@ -65,7 +70,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.endswith('demoty'):
+    if message.content.endswith(' demoty'):
         await demotbot.run(message)
 
 client.run(KEY)
