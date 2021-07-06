@@ -37,7 +37,12 @@ class komixxy:
 
 		komixxyArray = soup.find_all(class_='picwrapper')
 		randomKomixx = random.choice(komixxyArray)
-		imgUrl = 'https://komixxy.pl' + randomKomixx.img['src']
+
+		if randomKomixx.img['src'] != '/res/img/blank.gif':
+			imgUrl = 'https://komixxy.pl' + randomKomixx.img['src']
+		else:
+			imgUrl = 'https://komixxy.pl' + randomKomixx.img['data-src']
+
 		imgUrl = imgUrl.replace('_500.jpg','.jpg')
 
 		await message.channel.send(imgUrl)
