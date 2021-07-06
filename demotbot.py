@@ -11,7 +11,7 @@ class demotbot:
 
 	async def run(self, message):
 
-		query = message.content.replace('demoty','')
+		query = message.content[:-6]
 		print(query)
 		response = requests.get(f'https://demotywatory.pl/szukaj?q={query}')
 		soup = BeautifulSoup(response.content, 'html.parser')
