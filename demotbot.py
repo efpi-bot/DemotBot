@@ -2,6 +2,7 @@ import discord
 import requests
 import random
 import io
+import math
 from bs4 import BeautifulSoup
 
 class demotbot:
@@ -16,20 +17,23 @@ class demotbot:
 		response = requests.get(f'https://demotywatory.pl/szukaj?q={query}')
 		soup = BeautifulSoup(response.content, 'html.parser')
 
-		scriptTags = soup.find_all('script')
-		paginatorElement = ''
-		for i in scriptTags:
-			if 'paginator' in str(i):
-				paginatorElement = i
-				break
+		searchResultsH2 = soup.find_all('h2')
 
-		isSinglePage = False
 		try:
-			howManyPages = str(paginatorElement).split(',')[1]
-		except IndexError:
-			isSinglePage = True
+			resultH2 = searchResultsH2[2].string
+		except:
+			await message.channel.send('nie ma')
+			return
 
-		if isSinglePage == False:
+		howManyResults = ''
+		for i in searchResultsH2[2].string:
+			if str.isdigit(i):
+				howManyResults += i
+
+		howManyResults = int(howManyResults)
+		howManyPages = math.ceil(howManyResults/20)
+
+		if howManyPages != 1:
 			randomPageNumber = random.randint(1,int(howManyPages))
 			response = requests.get(f'https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}')
 			soup = BeautifulSoup(response.content, 'html.parser')
@@ -72,7 +76,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.endswith(' demoty'):
+    if message.content.lower().endswith(' demoty'):
         await demotbot.run(message)
 
 client.run(KEY)
