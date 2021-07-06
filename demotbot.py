@@ -41,7 +41,7 @@ class demotbot:
 
 		try:
 			randomDemot = random.choice(demotsArray)
-			imgUrl = randomDemot['src']
+			imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
 		except:
 			await message.channel.send('nie ma')
 			print('code: ' + str(response.status_code))
