@@ -30,7 +30,7 @@ class demotbot:
 
 		if isSinglePage == False:
 			randomPageNumber = random.randint(1,int(howManyPages))
-			resonse = requests.get(f'https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}')
+			response = requests.get(f'https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}')
 			soup = BeautifulSoup(response.content, 'html.parser')
 
 		demotsUrlArray = soup.find_all(class_='demot_pic')
@@ -66,7 +66,6 @@ async def on_message(message):
         return
 
     if message.content.endswith('demoty'):
-    	with message.channel.typing():
-        	await demotbot.run(message)
+        await demotbot.run(message)
 
 client.run(KEY)
