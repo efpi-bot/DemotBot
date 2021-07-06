@@ -1,7 +1,6 @@
 import discord
 import requests
 import random
-import io
 import math
 from bs4 import BeautifulSoup
 
@@ -52,11 +51,7 @@ class demotbot:
 				print('\nhowManyPages: ' + howManyPages + '\nrandomPageNumber: ' + randomPageNumber)
 			return
 
-		imgFileName = imgUrl.split('/')[-1]
-
-		imgResponse = requests.get(imgUrl, stream=True)
-		data = io.BytesIO(imgResponse.content)
-		await message.channel.send(file=discord.File(data, imgFileName))
+		await message.channel.send(imgUrl)
 
 
 # DISCORD BOT HERE
