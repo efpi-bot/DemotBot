@@ -4,6 +4,45 @@ import random
 import math
 from bs4 import BeautifulSoup
 
+class miejski:
+
+	def __init__(self):
+		None
+
+	async def run(self, message):
+
+		query = message.content[:-8]
+
+		url = f'https://www.miejski.pl/slowo-{query}'
+		r_word = requests.get(url)
+		definition = ''
+		soup = BeautifulSoup(r_word.content, 'html.parser')
+
+		for article in soup.findAll('article'):
+
+			if article.find('p') != None:
+				p = article.p.stripped_strings
+				definition += '\n'
+				
+				for string in p:
+					definition += string
+					definition += ' '
+
+				
+			if article.find('blockquote') != None:
+				definition += '\n > '
+				quote = article.blockquote.stripped_strings
+
+				for string in quote:
+					definition += string
+					definition += ' '
+				definition += '\n '
+
+		if len(definition) > 2000:
+			definition = definition[0:2000]
+
+		await message.channel.send(definition)
+
 class komixxy:
 
 	def __init__(self):
@@ -95,6 +134,7 @@ KEY = open('./key').read()
 
 demotbot = demotbot()
 komixxy = komixxy()
+miejski = miejski()
 
 client = discord.Client()
 
@@ -112,5 +152,8 @@ async def on_message(message):
 
     if message.content.lower().endswith(' komixxy'):
         await komixxy.run(message)
+
+    if message.content.lower().endswith(' miejski'):
+        await miejski.run(message)
 
 client.run(KEY)
