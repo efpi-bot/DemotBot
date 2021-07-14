@@ -123,7 +123,8 @@ class demotbot:
 		demotsArray = soup.find_all(class_='demot')
 
 		randomDemot = random.choice(demotsArray)
-		imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
+		imgUrl = randomDemot['src']
+		#imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
 
 		await message.channel.send(imgUrl)
 
