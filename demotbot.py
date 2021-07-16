@@ -4,6 +4,38 @@ import random
 import math
 from bs4 import BeautifulSoup
 
+class fandemonium:
+
+	def __init__(self):
+		None
+
+	async def run(self, message):
+
+		query = message.content[:-12]
+		print(query)
+		response = requests.get(f'http://fandemonium.pl/szukaj?q={query}')
+		soup = BeautifulSoup(response.content, 'html.parser')
+
+		howManyPages = len(soup.find_all(class_="paging"))
+		isPageEmpty = not bool(len(soup.find_all(class_=['fandemot','loaded'])))
+
+		if isPageEmpty == True:
+
+			await message.channel.send('nie ma')
+			return
+
+		elif howManyPages != 0:
+			randomPageNumber = random.randint(0, howManyPages-1)
+			response = requests.get(f'http://fandemonium.pl/szukaj?page={randomPageNumber}&q={query}')
+			soup = BeautifulSoup(response.content, 'html.parser')	
+
+		fandemotsArray = soup.find_all(class_=['fandemot','loaded'])
+
+		randomFandemot = random.choice(fandemotsArray)
+		imgUrl = randomFandemot['src']
+
+		await message.channel.send(imgUrl)
+
 class miejski:
 
 	def __init__(self):
@@ -136,6 +168,7 @@ KEY = open('./key').read()
 demotbot = demotbot()
 komixxy = komixxy()
 miejski = miejski()
+fandemonium = fandemonium()
 
 client = discord.Client()
 
@@ -156,5 +189,8 @@ async def on_message(message):
 
     if message.content.lower().endswith(' miejski'):
         await miejski.run(message)
+
+    if message.content.lower().endswith(' fandemonium'):
+    	await fandemonium.run(message)
 
 client.run(KEY)
