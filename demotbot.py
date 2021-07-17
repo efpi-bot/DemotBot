@@ -11,7 +11,7 @@ class fandemonium:
 
 	async def run(self, message):
 
-		query = message.content[:-12]
+		query = message.content[:-10]
 		print(query)
 		response = requests.get(f'http://fandemonium.pl/szukaj?q={query}')
 		soup = BeautifulSoup(response.content, 'html.parser')
@@ -190,7 +190,7 @@ async def on_message(message):
     if message.content.lower().endswith(' miejski'):
         await miejski.run(message)
 
-    if message.content.lower().endswith(' fandemonium'):
+    if message.content.lower().endswith(' fandemoty'):
     	await fandemonium.run(message)
 
 client.run(KEY)
