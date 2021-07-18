@@ -124,7 +124,7 @@ class demotbot:
 	def __init__(self):
 		None
 
-	async def run(self, message):
+	async def single(self, message):
 
 		query = message.content[:-7]
 		print(query)
@@ -161,6 +161,84 @@ class demotbot:
 		await message.channel.send(imgUrl)
 
 
+	async def topInit(self, message):
+
+		query = message.content[:-11]
+		print(query)
+		response = requests.get(f'https://demotywatory.pl/szukaj/page/1?q={query}')
+		soup = BeautifulSoup(response.content, 'html.parser')
+
+		searchResultsH2 = soup.find_all('h2')
+
+		try:
+			resultH2 = searchResultsH2[2].string
+		except:
+			await message.channel.send('nie ma')
+			return
+
+		howManyResults = ''
+		for i in searchResultsH2[2].string:
+			if str.isdigit(i):
+				howManyResults += i
+
+		howManyResults = int(howManyResults)
+		howManyPages = math.ceil(howManyResults/20)
+
+
+		demotsArray = soup.find_all(class_ = 'demot')
+		demot = demotsArray[0]
+
+		imgUrl = demot['src']
+
+		demotEmbed = discord.Embed(title = query)
+		demotEmbed.set_image(url = imgUrl)
+		demotEmbed.set_footer(text = f"1/{howManyResults}")
+		msgEmbed = await message.channel.send(embed = demotEmbed)
+		await msgEmbed.add_reaction("⬅️")
+		await msgEmbed.add_reaction("➡️")
+		await msgEmbed.add_reaction("🎲")
+
+	async def handleReactions(self, reaction):
+
+		demotEmbed = reaction.message.embeds[0]
+		query = demotEmbed.title
+		numCurrent = int(demotEmbed.footer.text.split('/')[0])
+		numMax = int(demotEmbed.footer.text.split('/')[1])
+		howManyPages = math.ceil(numMax/20)
+		numDesired = None
+
+		if reaction.emoji == "⬅️":
+			numDesired = numCurrent - 1
+
+		elif reaction.emoji == "➡️":
+			numDesired = numCurrent + 1
+
+		elif reaction.emoji == "🎲":
+			numDesired = random.randint(1, numMax)
+
+		if numDesired < 1 :
+			numDesired = numMax
+
+		elif numDesired > numMax:
+			numDesired = 1
+
+		pageDesired = math.ceil(numDesired/20)
+		numOnPage = numDesired - (pageDesired - 1)*20
+
+
+		response = requests.get(f'https://demotywatory.pl/szukaj/page/{pageDesired}?q={query}')
+		soup = BeautifulSoup(response.content, 'html.parser')
+
+		demotsArray = soup.find_all(class_ = 'demot')
+		demot = demotsArray[numOnPage - 1]
+		imgUrl = demot['src']
+
+		demotEmbed.set_image(url = imgUrl)
+		demotEmbed.set_footer(text = f"{numDesired}/{numMax}")
+
+		await reaction.message.edit(embed = demotEmbed)
+
+
 # DISCORD BOT HERE
 
 KEY = open('./key').read()
@@ -170,7 +248,9 @@ komixxy = komixxy()
 miejski = miejski()
 fandemonium = fandemonium()
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents = intents)
 
 @client.event
 async def on_ready():
@@ -182,7 +262,10 @@ async def on_message(message):
         return
 
     if message.content.lower().endswith(' demoty'):
-        await demotbot.run(message)
+        await demotbot.single(message)
+
+    if message.content.lower().endswith(' demoty all'):
+	    await demotbot.topInit(message)
 
     if message.content.lower().endswith(' komixxy'):
         await komixxy.run(message)
@@ -192,5 +275,21 @@ async def on_message(message):
 
     if message.content.lower().endswith(' fandemonium'):
     	await fandemonium.run(message)
+
+@client.event
+async def on_reaction_add(reaction, user):
+    if user == client.user:
+        return
+
+    if reaction.emoji in "⬅️➡️🎲" and reaction.me == True:
+    	await demotbot.handleReactions(reaction)
+
+@client.event
+async def on_reaction_remove(reaction, user):
+    if user == client.user:
+        return
+
+    if reaction.emoji in "⬅️➡️🎲" and reaction.me == True:
+    	await demotbot.handleReactions(reaction)
 
 client.run(KEY)
