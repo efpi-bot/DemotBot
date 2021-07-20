@@ -216,7 +216,10 @@ class demotbot:
 		elif reaction.emoji == "🎲":
 			numDesired = random.randint(1, numMax)
 
-		if numDesired < 1 :
+		if numDesired == numCurrent:
+			numDesired += 1
+
+		if numDesired < 1:
 			numDesired = numMax
 
 		elif numDesired > numMax:
