@@ -87,18 +87,13 @@ class komixxy:
 		response = requests.get(f'https://komixxy.pl/szukaj?q={query}')
 		soup = BeautifulSoup(response.content, 'html.parser')
 
-		howManyResults = ''
-		for string in soup.stripped_strings:
-			if 'Znalazłem' in string:
-				for i in string:
-					if str.isdigit(i):
-						howManyResults += i
+		searchResult = soup.find(id = "main_container").contents[25].strip()
 
-		if howManyResults == '':
+		if searchResult == "Nic takiego nie znalazłem":
 			await message.channel.send('nie ma')
 			return
 
-		howManyResults = int(howManyResults)
+		howManyResults = int(searchResult.split(' ')[1])
 		howManyPages = math.ceil(howManyResults/10)
 
 		if howManyPages != 1:
