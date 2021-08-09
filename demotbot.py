@@ -45,7 +45,11 @@ class miejski:
 
 		query = message.content[:-8]
 
-		url = f'https://www.miejski.pl/slowo-{query}'
+		if query == 'losuj':
+			url = f'https://www.miejski.pl/losuj'
+		else:
+			url = f'https://www.miejski.pl/slowo-{query}'
+
 		r_word = requests.get(url)
 		definition = ''
 		soup = BeautifulSoup(r_word.content, 'html.parser')
@@ -55,7 +59,10 @@ class miejski:
 			if article.find('p') != None:
 				p = article.p.stripped_strings
 				definition += '\n'
-				
+
+				header = article.find('header').string
+				definition += f'**{header}**\n'
+
 				for string in p:
 					definition += string
 					definition += ' '
@@ -68,7 +75,7 @@ class miejski:
 				for string in quote:
 					definition += string
 					definition += ' '
-				definition += '\n '
+				definition += '\n\n '
 
 		if len(definition) > 2000:
 			definition = definition[0:2000]
