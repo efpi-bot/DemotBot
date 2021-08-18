@@ -157,7 +157,13 @@ class demotbot:
 		demotsArray = soup.find_all(class_='demot')
 
 		randomDemot = random.choice(demotsArray)
-		imgUrl = randomDemot['src']
+
+
+		if randomDemot['src'] != '/res/img/blank.gif':
+			imgUrl = randomDemot['src']
+		else:
+			imgUrl = randomDemot['data-src']
+
 		#imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
 
 		await message.channel.send(imgUrl)
@@ -190,7 +196,10 @@ class demotbot:
 		demotsArray = soup.find_all(class_ = 'demot')
 		demot = demotsArray[0]
 
-		imgUrl = demot['src']
+		if demot['src'] != '/res/img/blank.gif':
+			imgUrl = demot['src']
+		else:
+			imgUrl = demot['data-src']
 
 		demotEmbed = discord.Embed(title = query)
 		demotEmbed.set_image(url = imgUrl)
@@ -236,7 +245,11 @@ class demotbot:
 
 		demotsArray = soup.find_all(class_ = 'demot')
 		demot = demotsArray[numOnPage - 1]
-		imgUrl = demot['src']
+		
+		if demot['src'] != '/res/img/blank.gif':
+			imgUrl = demot['src']
+		else:
+			imgUrl = demot['data-src']
 
 		demotEmbed.set_image(url = imgUrl)
 		demotEmbed.set_footer(text = f"{numDesired}/{numMax}")
