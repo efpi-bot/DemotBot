@@ -9,21 +9,21 @@ def parse_styling(element):
         elif item.name == "a":
             element[index] = f"__{item.string}__"
         elif item.name == "br":
-            element[index] = "\n"
+            element[index] = ""
         else:
             element[index] = item.string
 
-    return "".join(element).replace("\n\n", "\n")
+    return "".join(element).strip()
 
 
 def parse_article(article: BeautifulSoup):
     word = f"**{article.header.string}**"
     try:
-        definition = parse_styling(list(article.p.children)).strip()
+        definition = parse_styling(list(article.p.children))
     except:
         definition = None
     try:
-        quote = f"*{parse_styling(list(article.blockquote.children)).strip()}*"
+        quote = f"*{parse_styling(list(article.blockquote.children))}*"
     except:
         quote = None
 
