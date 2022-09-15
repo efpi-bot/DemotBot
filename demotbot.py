@@ -3,263 +3,250 @@ import requests
 import random
 import math
 from bs4 import BeautifulSoup
+from miejskiapi import get_miejski
+
 
 class fandemonium:
+    def __init__(self):
+        None
 
-	def __init__(self):
-		None
+    async def run(self, message):
 
-	async def run(self, message):
+        query = message.content[:-10]
+        print(query)
+        response = requests.get(f"http://fandemonium.pl/szukaj?q={query}")
+        soup = BeautifulSoup(response.content, "html.parser")
 
-		query = message.content[:-10]
-		print(query)
-		response = requests.get(f'http://fandemonium.pl/szukaj?q={query}')
-		soup = BeautifulSoup(response.content, 'html.parser')
+        howManyPages = len(soup.find_all(class_="paging"))
+        isPageEmpty = not bool(len(soup.find_all(class_=["fandemot", "loaded"])))
 
-		howManyPages = len(soup.find_all(class_="paging"))
-		isPageEmpty = not bool(len(soup.find_all(class_=['fandemot','loaded'])))
+        if isPageEmpty == True:
 
-		if isPageEmpty == True:
+            await message.channel.send("nie ma")
+            return
 
-			await message.channel.send('nie ma')
-			return
+        elif howManyPages != 0:
+            randomPageNumber = random.randint(0, howManyPages - 1)
+            response = requests.get(
+                f"http://fandemonium.pl/szukaj?page={randomPageNumber}&q={query}"
+            )
+            soup = BeautifulSoup(response.content, "html.parser")
 
-		elif howManyPages != 0:
-			randomPageNumber = random.randint(0, howManyPages-1)
-			response = requests.get(f'http://fandemonium.pl/szukaj?page={randomPageNumber}&q={query}')
-			soup = BeautifulSoup(response.content, 'html.parser')	
+        fandemotsArray = soup.find_all(class_=["fandemot", "loaded"])
 
-		fandemotsArray = soup.find_all(class_=['fandemot','loaded'])
+        randomFandemot = random.choice(fandemotsArray)
+        imgUrl = randomFandemot["src"]
 
-		randomFandemot = random.choice(fandemotsArray)
-		imgUrl = randomFandemot['src']
+        await message.channel.send(imgUrl)
 
-		await message.channel.send(imgUrl)
 
 class miejski:
+    def __init__(self):
+        None
 
-	def __init__(self):
-		None
+    async def run(self, message):
 
-	async def run(self, message):
+        query = message.content[:-8]
 
-		query = message.content[:-8]
+        parsed = get_miejski(query)
 
-		if query == 'losuj':
-			url = f'https://www.miejski.pl/losuj'
-		else:
-			url = f'https://www.miejski.pl/slowo-{query}'
+        full_message = ""
+        for i in parsed:
+            full_message += parsed[0]["word"] + "\n"
+            if i["definition"] != None:
+                full_message += i["definition"] + "\n\n"
+            if i["quote"] != None:
+                full_message += i["quote"] + "\n\n"
 
-		r_word = requests.get(url)
-		definition = ''
-		soup = BeautifulSoup(r_word.content, 'html.parser')
+        if len(full_message) > 2000:
+            for i in parsed:
+                short_message = (
+                    i["word"] + "\n\n" + i["definition"] + "\n\n" + i["quote"]
+                )
+                await message.channel.send(short_message)
+            return
 
-		for article in soup.findAll('article'):
+        await message.channel.send(full_message)
 
-			if article.find('p') != None:
-				p = article.p.stripped_strings
-				definition += '\n'
-
-				header = article.find('header').string
-				definition += f'**{header}**\n'
-
-				for string in p:
-					definition += string
-					definition += ' '
-
-				
-			if article.find('blockquote') != None:
-				definition += '\n > '
-				quote = article.blockquote.stripped_strings
-
-				for string in quote:
-					definition += string
-					definition += ' '
-				definition += '\n\n '
-
-		if len(definition) > 2000:
-			definition = definition[0:2000]
-
-		await message.channel.send(definition)
 
 class komixxy:
+    def __init__(self):
+        None
 
-	def __init__(self):
-		None
+    async def run(self, message):
 
-	async def run(self, message):
+        query = message.content[:-8]
+        print(query)
+        response = requests.get(f"https://komixxy.pl/szukaj?q={query}")
+        soup = BeautifulSoup(response.content, "html.parser")
 
-		query = message.content[:-8]
-		print(query)
-		response = requests.get(f'https://komixxy.pl/szukaj?q={query}')
-		soup = BeautifulSoup(response.content, 'html.parser')
+        searchResult = soup.find(id="main_container").contents[25].strip()
 
-		searchResult = soup.find(id = "main_container").contents[25].strip()
+        if searchResult == "Nic takiego nie znalazłem":
+            await message.channel.send("nie ma")
+            return
 
-		if searchResult == "Nic takiego nie znalazłem":
-			await message.channel.send('nie ma')
-			return
+        howManyResults = int(searchResult.split(" ")[1])
+        howManyPages = math.ceil(howManyResults / 10)
 
-		howManyResults = int(searchResult.split(' ')[1])
-		howManyPages = math.ceil(howManyResults/10)
+        if howManyPages != 1:
+            randomPageNumber = random.randint(1, int(howManyPages))
+            response = requests.get(
+                f"https://komixxy.pl/szukaj/page/{randomPageNumber}?q={query}"
+            )
+            soup = BeautifulSoup(response.content, "html.parser")
 
-		if howManyPages != 1:
-			randomPageNumber = random.randint(1,int(howManyPages))
-			response = requests.get(f'https://komixxy.pl/szukaj/page/{randomPageNumber}?q={query}')
-			soup = BeautifulSoup(response.content, 'html.parser')
+        komixxyArray = soup.find_all(class_="picwrapper")
+        randomKomixx = random.choice(komixxyArray)
 
-		komixxyArray = soup.find_all(class_='picwrapper')
-		randomKomixx = random.choice(komixxyArray)
+        if randomKomixx.img["src"] != "/res/img/blank.gif":
+            imgUrl = "https://komixxy.pl" + randomKomixx.img["src"]
+        else:
+            imgUrl = "https://komixxy.pl" + randomKomixx.img["data-src"]
 
-		if randomKomixx.img['src'] != '/res/img/blank.gif':
-			imgUrl = 'https://komixxy.pl' + randomKomixx.img['src']
-		else:
-			imgUrl = 'https://komixxy.pl' + randomKomixx.img['data-src']
+        imgUrl = imgUrl.replace("_500.jpg", ".jpg")
 
-		imgUrl = imgUrl.replace('_500.jpg','.jpg')
-
-		await message.channel.send(imgUrl)
+        await message.channel.send(imgUrl)
 
 
 class demotbot:
+    def __init__(self):
+        None
 
-	def __init__(self):
-		None
+    async def single(self, message):
 
-	async def single(self, message):
+        query = message.content[:-7]
+        print(query)
+        response = requests.get(f"https://demotywatory.pl/szukaj?q={query}")
+        soup = BeautifulSoup(response.content, "html.parser")
 
-		query = message.content[:-7]
-		print(query)
-		response = requests.get(f'https://demotywatory.pl/szukaj?q={query}')
-		soup = BeautifulSoup(response.content, 'html.parser')
+        searchResultsH2 = soup.find_all("h2")
 
-		searchResultsH2 = soup.find_all('h2')
+        try:
+            resultH2 = searchResultsH2[2].string
+        except:
+            await message.channel.send("nie ma")
+            return
 
-		try:
-			resultH2 = searchResultsH2[2].string
-		except:
-			await message.channel.send('nie ma')
-			return
+        howManyResults = ""
+        for i in searchResultsH2[2].string:
+            if str.isdigit(i):
+                howManyResults += i
 
-		howManyResults = ''
-		for i in searchResultsH2[2].string:
-			if str.isdigit(i):
-				howManyResults += i
+        howManyResults = int(howManyResults)
+        howManyPages = math.ceil(howManyResults / 20)
 
-		howManyResults = int(howManyResults)
-		howManyPages = math.ceil(howManyResults/20)
+        if howManyPages != 1:
+            randomPageNumber = random.randint(1, int(howManyPages))
+            response = requests.get(
+                f"https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}"
+            )
+            soup = BeautifulSoup(response.content, "html.parser")
 
-		if howManyPages != 1:
-			randomPageNumber = random.randint(1,int(howManyPages))
-			response = requests.get(f'https://demotywatory.pl/szukaj/page/{randomPageNumber}?q={query}')
-			soup = BeautifulSoup(response.content, 'html.parser')
+        demotsArray = soup.find_all(class_="demot")
 
-		demotsArray = soup.find_all(class_='demot')
+        randomDemot = random.choice(demotsArray)
 
-		randomDemot = random.choice(demotsArray)
+        if randomDemot["src"] != "/res/img/blank.gif":
+            imgUrl = randomDemot["src"]
+        else:
+            imgUrl = randomDemot["data-src"]
 
+        # imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
 
-		if randomDemot['src'] != '/res/img/blank.gif':
-			imgUrl = randomDemot['src']
-		else:
-			imgUrl = randomDemot['data-src']
+        await message.channel.send(imgUrl)
 
-		#imgUrl = randomDemot['src'].replace('_600.jpg','.jpg')
+    async def topInit(self, message):
 
-		await message.channel.send(imgUrl)
+        query = message.content[:-11]
+        print(query)
+        response = requests.get(f"https://demotywatory.pl/szukaj/page/1?q={query}")
+        soup = BeautifulSoup(response.content, "html.parser")
 
+        searchResultsH2 = soup.find_all("h2")
 
-	async def topInit(self, message):
+        try:
+            resultH2 = searchResultsH2[2].string
+        except:
+            await message.channel.send("nie ma")
+            return
 
-		query = message.content[:-11]
-		print(query)
-		response = requests.get(f'https://demotywatory.pl/szukaj/page/1?q={query}')
-		soup = BeautifulSoup(response.content, 'html.parser')
+        howManyResults = ""
+        for i in searchResultsH2[2].string:
+            if str.isdigit(i):
+                howManyResults += i
 
-		searchResultsH2 = soup.find_all('h2')
+        howManyResults = int(howManyResults)
+        howManyPages = math.ceil(howManyResults / 20)
 
-		try:
-			resultH2 = searchResultsH2[2].string
-		except:
-			await message.channel.send('nie ma')
-			return
+        demotsArray = soup.find_all(class_="demot")
+        demot = demotsArray[0]
 
-		howManyResults = ''
-		for i in searchResultsH2[2].string:
-			if str.isdigit(i):
-				howManyResults += i
+        if demot["src"] != "/res/img/blank.gif":
+            imgUrl = demot["src"]
+        else:
+            imgUrl = demot["data-src"]
 
-		howManyResults = int(howManyResults)
-		howManyPages = math.ceil(howManyResults/20)
+        demotEmbed = discord.Embed(title=query)
+        demotEmbed.set_image(url=imgUrl)
+        demotEmbed.set_footer(text=f"1/{howManyResults}")
+        msgEmbed = await message.channel.send(embed=demotEmbed)
+        await msgEmbed.add_reaction("⬅️")
+        await msgEmbed.add_reaction("➡️")
+        await msgEmbed.add_reaction("🎲")
 
+    async def handleReactions(self, reaction):
 
-		demotsArray = soup.find_all(class_ = 'demot')
-		demot = demotsArray[0]
+        demotEmbed = reaction.message.embeds[0]
+        query = demotEmbed.title
+        numCurrent = int(demotEmbed.footer.text.split("/")[0])
+        numMax = int(demotEmbed.footer.text.split("/")[1])
+        howManyPages = math.ceil(numMax / 20)
+        numDesired = None
 
-		if demot['src'] != '/res/img/blank.gif':
-			imgUrl = demot['src']
-		else:
-			imgUrl = demot['data-src']
+        if reaction.emoji == "⬅️":
+            numDesired = numCurrent - 1
 
-		demotEmbed = discord.Embed(title = query)
-		demotEmbed.set_image(url = imgUrl)
-		demotEmbed.set_footer(text = f"1/{howManyResults}")
-		msgEmbed = await message.channel.send(embed = demotEmbed)
-		await msgEmbed.add_reaction("⬅️")
-		await msgEmbed.add_reaction("➡️")
-		await msgEmbed.add_reaction("🎲")
+        elif reaction.emoji == "➡️":
+            numDesired = numCurrent + 1
 
-	async def handleReactions(self, reaction):
+        elif reaction.emoji == "🎲":
+            numDesired = random.randint(1, numMax)
 
-		demotEmbed = reaction.message.embeds[0]
-		query = demotEmbed.title
-		numCurrent = int(demotEmbed.footer.text.split('/')[0])
-		numMax = int(demotEmbed.footer.text.split('/')[1])
-		howManyPages = math.ceil(numMax/20)
-		numDesired = None
+        if numDesired == numCurrent:
+            numDesired += 1
 
-		if reaction.emoji == "⬅️":
-			numDesired = numCurrent - 1
+        if numDesired < 1:
+            numDesired = numMax
 
-		elif reaction.emoji == "➡️":
-			numDesired = numCurrent + 1
+        elif numDesired > numMax:
+            numDesired = 1
 
-		elif reaction.emoji == "🎲":
-			numDesired = random.randint(1, numMax)
+        pageDesired = math.ceil(numDesired / 20)
+        numOnPage = numDesired - (pageDesired - 1) * 20
 
-		if numDesired == numCurrent:
-			numDesired += 1
+        response = requests.get(
+            f"https://demotywatory.pl/szukaj/page/{pageDesired}?q={query}"
+        )
+        soup = BeautifulSoup(response.content, "html.parser")
 
-		if numDesired < 1:
-			numDesired = numMax
+        demotsArray = soup.find_all(class_="demot")
+        demot = demotsArray[numOnPage - 1]
 
-		elif numDesired > numMax:
-			numDesired = 1
+        if demot["src"] != "/res/img/blank.gif":
+            imgUrl = demot["src"]
+        else:
+            imgUrl = demot["data-src"]
 
-		pageDesired = math.ceil(numDesired/20)
-		numOnPage = numDesired - (pageDesired - 1)*20
+        demotEmbed.set_image(url=imgUrl)
+        demotEmbed.set_footer(text=f"{numDesired}/{numMax}")
 
-
-		response = requests.get(f'https://demotywatory.pl/szukaj/page/{pageDesired}?q={query}')
-		soup = BeautifulSoup(response.content, 'html.parser')
-
-		demotsArray = soup.find_all(class_ = 'demot')
-		demot = demotsArray[numOnPage - 1]
-		
-		if demot['src'] != '/res/img/blank.gif':
-			imgUrl = demot['src']
-		else:
-			imgUrl = demot['data-src']
-
-		demotEmbed.set_image(url = imgUrl)
-		demotEmbed.set_footer(text = f"{numDesired}/{numMax}")
-
-		await reaction.message.edit(embed = demotEmbed)
+        await reaction.message.edit(embed=demotEmbed)
 
 
 # DISCORD BOT HERE
 
-KEY = open('./key').read()
+KEY = open("./key").read()
 
 demotbot = demotbot()
 komixxy = komixxy()
@@ -268,31 +255,34 @@ fandemonium = fandemonium()
 
 intents = discord.Intents.default()
 intents.members = True
-client = discord.Client(intents = intents)
+client = discord.Client(intents=intents)
+
 
 @client.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+    print("We have logged in as {0.user}".format(client))
+
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.content.lower().endswith(' demoty'):
+    if message.content.lower().endswith(" demoty"):
         await demotbot.single(message)
 
-    if message.content.lower().endswith(' demoty all'):
-	    await demotbot.topInit(message)
+    if message.content.lower().endswith(" demoty all"):
+        await demotbot.topInit(message)
 
-    if message.content.lower().endswith(' komixxy'):
+    if message.content.lower().endswith(" komixxy"):
         await komixxy.run(message)
 
-    if message.content.lower().endswith(' miejski'):
+    if message.content.lower().endswith(" miejski"):
         await miejski.run(message)
 
-    if message.content.lower().endswith(' fandemoty'):
-    	await fandemonium.run(message)
+    if message.content.lower().endswith(" fandemoty"):
+        await fandemonium.run(message)
+
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -300,7 +290,8 @@ async def on_reaction_add(reaction, user):
         return
 
     if reaction.emoji in "⬅️➡️🎲" and reaction.me == True:
-    	await demotbot.handleReactions(reaction)
+        await demotbot.handleReactions(reaction)
+
 
 @client.event
 async def on_reaction_remove(reaction, user):
@@ -308,6 +299,7 @@ async def on_reaction_remove(reaction, user):
         return
 
     if reaction.emoji in "⬅️➡️🎲" and reaction.me == True:
-    	await demotbot.handleReactions(reaction)
+        await demotbot.handleReactions(reaction)
+
 
 client.run(KEY)
